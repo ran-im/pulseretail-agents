@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PulsePass — Your Loyalty Intelligence Portal</title>
+  <style>
+    :root {
+      --pulse-dark: #0d0d1a;
+      --pulse-card: #1a1a2e;
+      --pulse-card2: #16213e;
+      --pulse-green: #00f5a0;
+      --pulse-green2: #00d68f;
+      --pulse-white: #f8f9fa;
+      --pulse-grey: #8892a4;
+      --pulse-border: rgba(0, 245, 160, 0.15);
+      --pulse-glow: 0 0 20px rgba(0, 245, 160, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--pulse-dark);
+      color: var(--pulse-white);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 2.5rem;
+      border-bottom: 1px solid var(--pulse-border);
+      background: rgba(13, 13, 26, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .logo span { color: var(--pulse-green); }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .nav-badge {
+      background: var(--pulse-green);
+      color: var(--pulse-dark);
+      border-radius: 20px;
+      padding: 0.3rem 0.9rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .nav-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--pulse-green), #0099ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: var(--pulse-dark);
+      cursor: pointer;
+    }
+
+    /* HERO */
+    .hero {
+      padding: 2.5rem 2.5rem 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .hero-greeting {
+      font-size: 0.85rem;
+      color: var(--pulse-grey);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 0.4rem;
+    }
+
+    .hero h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .hero h1 span { color: var(--pulse-green); }
+
+    .hero-sub {
+      color: var(--pulse-grey);
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    /* MAIN GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2.5rem 2.5rem;
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--pulse-card);
+      border: 1px solid var(--pulse-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--pulse-grey);
+      margin-bottom: 1rem;
+    }
+
+    /* PULSE SCORE */
+    .score-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .score-ring {
+      position: relative;
+      width: 160px;
+      height: 160px;
+    }
+
+    .score-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .score-ring .bg-circle {
+      fill: none;
+      stroke: rgba(0, 245, 160, 0.1);
+      stroke-width: 10;
+    }
+
+    .score-ring .progress-circle {
+      fill: none;
+      stroke: var(--pulse-green);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 408;
+      stroke-dashoffset: 408;
+      transition: stroke-dashoffset 1.8s cubic-bezier(0.25, 1, 0.5, 1);
+      filter: drop-shadow(0 0 6px rgba(0, 245, 160, 0.6));
+    }
+
+    .score-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .score-number {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--pulse-white);
+      line-height: 1;
+    }
+
+    .score-label {
+      font-size: 0.7rem;
+      color: var(--pulse-green);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    .score-tier {
+      text-align: center;
+    }
+
+    .tier-name {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--pulse-green);
+    }
+
+    .tier-sub {
+      font-size: 0.8rem;
+      color: var(--pulse-grey);
+      margin-top: 2px;
+    }
+
+    .progress-bar-wrap {
+      width: 100%;
+    }
+
+    .progress-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--pulse-grey);
+      margin-bottom: 6px;
+    }
+
+    .progress-bar-label span:last-child { color: var(--pulse-green); }
+
+    .progress-bar {
+      height: 6px;
+      background: rgba(0, 245, 160, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--pulse-green), #00d68f);
+      border-radius: 10px;
+      width: 0%;
+      transition: width 2s cubic-bezier(0.25, 1, 0.5, 1);
+      box-shadow: 0 0 8px rgba(0, 245, 160, 0.4);
+    }
+
+    .score-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    .stat-mini {
+      background: rgba(0, 245, 160, 0.05);
+      border: 1px solid var(--pulse-border);
+      border-radius: 10px;
+      padding: 0.7rem;
+      text-align: center;
+    }
+
+    .stat-mini-val {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--pulse-white);
+    }
+
+    .stat-mini-lbl {
+      font-size: 0.65rem;
+      color: var(--pulse-grey);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    /* RIGHT COLUMN */
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* RECOMMENDATIONS */
+    .reco-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .product-card {
+      background: var(--pulse-card2);
+      border: 1px solid var(--pulse-border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+      cursor: pointer;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--pulse-green);
+      box-shadow: var(--pulse-glow);
+    }
+
+    .product-img {
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      position: relative;
+    }
+
+    .product-img.yoga { background: linear-gradient(135deg, #1a1a3e, #2d1b4e); }
+    .product-img.run { background: linear-gradient(135deg, #0a2a1a, #1a3d2a); }
+    .product-img.gym { background: linear-gradient(135deg, #2a1a0a, #3d2a1a); }
+
+    .eco-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0, 245, 160, 0.2);
+      border: 1px solid var(--pulse-green);
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 0.6rem;
+      color: var(--pulse-green);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .product-info {
+      padding: 0.9rem;
+    }
+
+    .product-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .product-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .product-price {
+      color: var(--pulse-green);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .product-match {
+      font-size: 0.68rem;
+      color: var(--pulse-grey);
+    }
+
+    .add-btn {
+      display: block;
+      width: calc(100% - 1.8rem);
+      margin: 0 0.9rem 0.9rem;
+      padding: 0.5rem;
+      background: transparent;
+      border: 1px solid var(--pulse-border);
+      border-radius: 8px;
+      color: var(--pulse-white);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      text-align: center;
+    }
+
+    .add-btn:hover {
+      background: var(--pulse-green);
+      border-color: var(--pulse-green);
+      color: var(--pulse-dark);
+    }
+
+    /* BOTTOM ROW */
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    /* STREAK */
+    .streak-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-top: 0.5rem;
+    }
+
+    .streak-day {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      background: rgba(0, 245, 160, 0.06);
+      border: 1px solid rgba(0, 245, 160, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.55rem;
+      color: var(--pulse-grey);
+      transition: all 0.3s;
+    }
+
+    .streak-day.active {
+      background: rgba(0, 245, 160, 0.2);
+      border-color: var(--pulse-green);
+      color: var(--pulse-green);
+    }
+
+    .streak-day.purchase {
+      background: var(--pulse-green);
+      border-color: var(--pulse-green);
+      color: var(--pulse-dark);
+      font-weight: 700;
+    }
+
+    .streak-info {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .streak-stat {
+      flex: 1;
+      background: rgba(0, 245, 160, 0.05);
+      border-radius: 10px;
+      padding: 0.7rem;
+      text-align: center;
+      border: 1px solid var(--pulse-border);
+    }
+
+    .streak-stat-val {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: var(--pulse-green);
+    }
+
+    .streak-stat-lbl {
+      font-size: 0.65rem;
+      color: var(--pulse-grey);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* COMMUNITY */
+    .community-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .community-card {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.8rem;
+      background: var(--pulse-card2);
+      border-radius: 10px;
+      border: 1px solid var(--pulse-border);
+      opacity: 0;
+      transform: translateX(20px);
+      transition: opacity 0.5s, transform 0.5s;
+    }
+
+    .community-card.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .community-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .community-text {
+      flex: 1;
+    }
+
+    .community-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .community-action {
+      font-size: 0.75rem;
+      color: var(--pulse-grey);
+    }
+
+    .community-time {
+      font-size: 0.68rem;
+      color: var(--pulse-green);
+      white-space: nowrap;
+    }
+
+    /* WIN-BACK BANNER */
+    .winback-banner {
+      background: linear-gradient(135deg, rgba(0, 245, 160, 0.1), rgba(0, 214, 143, 0.05));
+      border: 1px solid var(--pulse-green);
+      border-radius: 16px;
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      animation: pulse-glow 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 15px rgba(0, 245, 160, 0.1); }
+      50% { box-shadow: 0 0 30px rgba(0, 245, 160, 0.3); }
+    }
+
+    .winback-text h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .winback-text p {
+      font-size: 0.82rem;
+      color: var(--pulse-grey);
+    }
+
+    .winback-text p span {
+      color: var(--pulse-green);
+      font-weight: 600;
+    }
+
+    .winback-btn {
+      background: var(--pulse-green);
+      color: var(--pulse-dark);
+      border: none;
+      border-radius: 10px;
+      padding: 0.7rem 1.4rem;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .winback-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 20px rgba(0, 245, 160, 0.4);
+    }
+
+    /* AGENT FOOTER */
+    .agent-footer {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2.5rem 2rem;
+      border-top: 1px solid var(--pulse-border);
+      padding-top: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .agent-pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      color: var(--pulse-grey);
+    }
+
+    .agent-pill {
+      background: rgba(0, 245, 160, 0.08);
+      border: 1px solid var(--pulse-border);
+      border-radius: 20px;
+      padding: 2px 8px;
+      color: var(--pulse-green);
+      font-size: 0.68rem;
+      font-weight: 600;
+    }
+
+    .agent-arrow { color: var(--pulse-border); }
+
+    .footer-right {
+      font-size: 0.7rem;
+      color: var(--pulse-grey);
+    }
+
+    .footer-right span { color: var(--pulse-green); }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+        padding: 0 1rem 2rem;
+      }
+      .reco-grid { grid-template-columns: 1fr 1fr; }
+      .bottom-row { grid-template-columns: 1fr; }
+      .hero { padding: 1.5rem 1rem 1rem; }
+      nav { padding: 1rem 1.2rem; }
+      .agent-footer { flex-direction: column; gap: 0.8rem; padding: 1rem; }
+    }
+
+    @media (max-width: 500px) {
+      .reco-grid { grid-template-columns: 1fr; }
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--pulse-card);
+      border: 1px solid var(--pulse-green);
+      border-radius: 12px;
+      padding: 0.9rem 1.3rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 999;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast span { color: var(--pulse-green); }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">Pulse<span>Pass</span></div>
+    <div class="nav-right">
+      <div class="nav-badge">340 pts</div>
+      <div class="nav-avatar">EK</div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-greeting">Welcome back</div>
+    <h1>Hey <span>Emma</span>, your journey continues.</h1>
+    <p class="hero-sub">Member since February 2026 &nbsp;·&nbsp; Yoga Enthusiast &nbsp;·&nbsp; Pulse Pro tier</p>
+  </div>
+
+  <!-- WIN-BACK BANNER -->
+  <div style="max-width:1200px; margin: 0 auto; padding: 0 2.5rem 1.5rem;">
+    <div class="winback-banner">
+      <div class="winback-text">
+        <h3>Your €10 reward is 60 points away</h3>
+        <p>Buy any item today and get <span>double points</span> — exclusive for Pulse Pro members this week.</p>
+      </div>
+      <button class="winback-btn" onclick="showToast('🎉 Double points activated!')">Claim Offer</button>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid">
+
+    <!-- LEFT: PULSE SCORE -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <div class="card">
+        <div class="card-title">Your PulseScore</div>
+        <div class="score-wrap">
+          <div class="score-ring">
+            <svg width="160" height="160" viewBox="0 0 160 160">
+              <circle class="bg-circle" cx="80" cy="80" r="65"/>
+              <circle class="progress-circle" id="scoreCircle" cx="80" cy="80" r="65"/>
+            </svg>
+            <div class="score-center">
+              <div class="score-number" id="scoreNumber">0</div>
+              <div class="score-label">Points</div>
+            </div>
+          </div>
+
+          <div class="score-tier">
+            <div class="tier-name">Pulse Pro</div>
+            <div class="tier-sub">60 pts to Pulse Elite</div>
+          </div>
+
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-label">
+              <span>Pulse Pro (300)</span>
+              <span>Pulse Elite (400)</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-bar-fill" id="progressFill"></div>
+            </div>
+          </div>
+
+          <div class="score-stats">
+            <div class="stat-mini">
+              <div class="stat-mini-val">2</div>
+              <div class="stat-mini-lbl">Purchases</div>
+            </div>
+            <div class="stat-mini">
+              <div class="stat-mini-val">€170</div>
+              <div class="stat-mini-lbl">Total Spent</div>
+            </div>
+            <div class="stat-mini">
+              <div class="stat-mini-val">47</div>
+              <div class="stat-mini-lbl">Days Active</div>
+            </div>
+            <div class="stat-mini">
+              <div class="stat-mini-val">€10</div>
+              <div class="stat-mini-lbl">Next Reward</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-col">
+
+      <!-- RECOMMENDATIONS -->
+      <div class="card">
+        <div class="card-title">Your Next Pulse — AI Picks For You</div>
+        <div class="reco-grid">
+
+          <div class="product-card">
+            <div class="product-img yoga">
+              🧘
+              <div class="eco-badge">Eco</div>
+            </div>
+            <div class="product-info">
+              <div class="product-name">Flow Bra – Sage</div>
+              <div class="product-meta">
+                <span class="product-price">€55</span>
+                <span class="product-match">98% match</span>
+              </div>
+            </div>
+            <button class="add-btn" onclick="showToast('Added Flow Bra to bag +55 pts')">Add to Bag</button>
+          </div>
+
+          <div class="product-card">
+            <div class="product-img run">
+              ⚡
+              <div class="eco-badge">Eco</div>
+            </div>
+            <div class="product-info">
+              <div class="product-name">Align 2.0 Tank</div>
+              <div class="product-meta">
+                <span class="product-price">€45</span>
+                <span class="product-match">94% match</span>
+              </div>
+            </div>
+            <button class="add-btn" onclick="showToast('Added Align Tank to bag +45 pts')">Add to Bag</button>
+          </div>
+
+          <div class="product-card">
+            <div class="product-img gym">
+              🔥
+              <div class="eco-badge">Eco</div>
+            </div>
+            <div class="product-info">
+              <div class="product-name">Core Shorts – Obsidian</div>
+              <div class="product-meta">
+                <span class="product-price">€62</span>
+                <span class="product-match">91% match</span>
+              </div>
+            </div>
+            <button class="add-btn" onclick="showToast('Added Core Shorts to bag +62 pts')">Add to Bag</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- BOTTOM ROW -->
+      <div class="bottom-row">
+
+        <!-- STREAK -->
+        <div class="card">
+          <div class="card-title">Engagement Streak — April 2026</div>
+          <div class="streak-grid" id="streakGrid"></div>
+          <div class="streak-info">
+            <div class="streak-stat">
+              <div class="streak-stat-val">5</div>
+              <div class="streak-stat-lbl">Day Streak</div>
+            </div>
+            <div class="streak-stat">
+              <div class="streak-stat-val">+25</div>
+              <div class="streak-stat-lbl">Bonus pts</div>
+            </div>
+            <div class="streak-stat">
+              <div class="streak-stat-val">🔥</div>
+              <div class="streak-stat-lbl">On Fire</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMMUNITY -->
+        <div class="card">
+          <div class="card-title">Your Tribe — Yoga Enthusiasts</div>
+          <div class="community-cards" id="communityCards">
+            <div class="community-card" data-delay="0">
+              <div class="community-avatar" style="background:linear-gradient(135deg,#a855f7,#6366f1)">🧘</div>
+              <div class="community-text">
+                <div class="community-name">Sarah M.</div>
+                <div class="community-action">Just bought Align Leggings — same as you!</div>
+              </div>
+              <div class="community-time">2m ago</div>
+            </div>
+            <div class="community-card" data-delay="200">
+              <div class="community-avatar" style="background:linear-gradient(135deg,#10b981,#0d9488)">⚡</div>
+              <div class="community-text">
+                <div class="community-name">Claire D.</div>
+                <div class="community-action">Left a 5-star review on Flow Bra</div>
+              </div>
+              <div class="community-time">14m ago</div>
+            </div>
+            <div class="community-card" data-delay="400">
+              <div class="community-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">🔥</div>
+              <div class="community-text">
+                <div class="community-name">Aoife R.</div>
+                <div class="community-action">Reached Pulse Elite — 400 points!</div>
+              </div>
+              <div class="community-time">1h ago</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENT PIPELINE FOOTER -->
+  <div class="agent-footer">
+    <div class="agent-pipeline">
+      Built by the PulseRetail Agentic Organisation &nbsp;|&nbsp;
+      <span class="agent-pill">ARIA</span>
+      <span class="agent-arrow">→</span>
+      <span class="agent-pill">ZARA</span>
+      <span class="agent-arrow">→</span>
+      <span class="agent-pill">FORGE</span>
+      <span class="agent-arrow">→</span>
+      <span class="agent-pill">LYRA</span>
+      <span class="agent-arrow">→</span>
+      <span class="agent-pill">CODA</span>
+    </div>
+    <div class="footer-right">
+      H9CEAI Final Project &nbsp;·&nbsp; NCI 2026 &nbsp;·&nbsp; Powered by <span>Claude AI</span>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Animate score ring
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const circle = document.getElementById('scoreCircle');
+        const circumference = 408;
+        const score = 340;
+        const maxScore = 500;
+        const offset = circumference - (score / maxScore) * circumference;
+        circle.style.strokeDashoffset = offset;
+
+        // Animate number counter
+        let current = 0;
+        const target = 340;
+        const step = target / 60;
+        const counter = setInterval(() => {
+          current = Math.min(current + step, target);
+          document.getElementById('scoreNumber').textContent = Math.round(current);
+          if (current >= target) clearInterval(counter);
+        }, 30);
+
+        // Animate progress bar (340 - 300) / (400 - 300) = 40%
+        document.getElementById('progressFill').style.width = '40%';
+      }, 300);
+    });
+
+    // Build streak grid
+    const streakGrid = document.getElementById('streakGrid');
+    const days = ['M','T','W','T','F','S','S'];
+    const activeStates = [false, true, false, true, true, true, true, true, false, true,
+                          false, false, true, true, false, true, true, true, false, true,
+                          false, false, true, true, true, false, false, true, true, false];
+    const purchaseDays = [4, 15];
+
+    for (let i = 0; i < 28; i++) {
+      const d = document.createElement('div');
+      d.className = 'streak-day';
+      if (purchaseDays.includes(i)) {
+        d.className += ' purchase';
+        d.textContent = '★';
+      } else if (activeStates[i]) {
+        d.className += ' active';
+        d.textContent = '✓';
+      } else {
+        d.textContent = days[i % 7];
+      }
+      streakGrid.appendChild(d);
+    }
+
+    // Animate community cards
+    const cards = document.querySelectorAll('.community-card');
+    cards.forEach(card => {
+      const delay = parseInt(card.dataset.delay || 0);
+      setTimeout(() => card.classList.add('visible'), 600 + delay);
+    });
+
+    // Toast function
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerHTML = `<span>✓</span> ${msg}`;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>
