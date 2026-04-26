@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PulseRetail — Agentic Pipeline Runner</title>
+  <style>
+    :root {
+      --dark:    #0d0d1a;
+      --card:    #1a1a2e;
+      --card2:   #16213e;
+      --green:   #00f5a0;
+      --green2:  #00c27a;
+      --white:   #f8f9fa;
+      --grey:    #8892a4;
+      --border:  rgba(0,245,160,0.15);
+      --glow:    0 0 24px rgba(0,245,160,0.18);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--dark);color:var(--white);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;}
+
+    /* ── NAV ── */
+    nav{display:flex;align-items:center;justify-content:space-between;
+        padding:1.1rem 2.5rem;border-bottom:1px solid var(--border);
+        background:rgba(13,13,26,.96);position:sticky;top:0;z-index:100;backdrop-filter:blur(10px);}
+    .logo{font-size:1.4rem;font-weight:800;letter-spacing:-.5px;}
+    .logo span{color:var(--green);}
+    .nav-tag{background:rgba(0,245,160,.1);border:1px solid var(--border);
+             border-radius:20px;padding:.3rem .9rem;font-size:.75rem;color:var(--green);font-weight:600;}
+
+    /* ── SETUP SCREEN ── */
+    #setup{max-width:720px;margin:0 auto;padding:3rem 2rem;}
+    .setup-header{text-align:center;margin-bottom:2.5rem;}
+    .setup-header h1{font-size:2.2rem;font-weight:900;margin-bottom:.5rem;}
+    .setup-header h1 span{color:var(--green);}
+    .setup-header p{color:var(--grey);font-size:1rem;line-height:1.6;}
+
+    .pipeline-preview{display:flex;align-items:center;justify-content:center;
+        gap:.5rem;margin:1.5rem 0 2rem;flex-wrap:wrap;}
+    .prev-pill{background:rgba(0,245,160,.08);border:1px solid var(--border);
+               border-radius:20px;padding:.35rem 1rem;font-size:.85rem;
+               font-weight:700;color:var(--green);}
+    .prev-arrow{color:var(--grey);font-size:1rem;}
+
+    label{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:1.2px;
+          color:var(--grey);margin-bottom:.4rem;font-weight:600;}
+    input[type=password],input[type=text],textarea,select{
+        width:100%;background:var(--card);border:1px solid var(--border);
+        border-radius:10px;padding:.85rem 1rem;color:var(--white);font-size:.95rem;
+        font-family:inherit;outline:none;transition:border-color .2s;}
+    input[type=password]:focus,input[type=text]:focus,textarea:focus{border-color:var(--green);}
+    textarea{resize:vertical;min-height:110px;line-height:1.55;}
+    .form-group{margin-bottom:1.3rem;}
+    .hint{font-size:.75rem;color:var(--grey);margin-top:.35rem;}
+    .hint a{color:var(--green);text-decoration:none;}
+
+    .launch-btn{width:100%;padding:1rem;background:var(--green);color:var(--dark);
+        border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;
+        transition:transform .15s,box-shadow .15s;margin-top:.5rem;}
+    .launch-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,245,160,.35);}
+    .launch-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+
+    .err-box{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);
+             border-radius:10px;padding:.9rem 1.1rem;color:#fca5a5;
+             font-size:.85rem;margin-top:.8rem;display:none;}
+
+    /* ── PIPELINE SCREEN ── */
+    #pipeline{display:none;max-width:1100px;margin:0 auto;padding:2rem 1.5rem 3rem;}
+
+    .run-header{text-align:center;margin-bottom:2rem;}
+    .run-header h2{font-size:1.6rem;font-weight:800;}
+    .run-header p{color:var(--grey);margin-top:.3rem;font-size:.9rem;}
+
+    /* progress bar */
+    .global-progress{height:4px;background:rgba(0,245,160,.1);border-radius:4px;
+                     margin-bottom:2rem;overflow:hidden;}
+    .global-progress-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--green2));
+        border-radius:4px;width:0%;transition:width .6s ease;}
+
+    /* agent grid */
+    .agents-grid{display:flex;flex-direction:column;gap:1.2rem;}
+
+    .agent-card{background:var(--card);border:1px solid var(--border);
+                border-radius:14px;overflow:hidden;transition:border-color .3s,box-shadow .3s;}
+    .agent-card.running{border-color:var(--green);box-shadow:var(--glow);}
+    .agent-card.done{border-color:rgba(0,245,160,.4);}
+
+    .agent-header{display:flex;align-items:center;gap:1rem;
+                  padding:1rem 1.3rem;background:var(--card2);cursor:pointer;user-select:none;}
+    .agent-status-icon{width:32px;height:32px;border-radius:50%;display:flex;
+        align-items:center;justify-content:center;flex-shrink:0;font-size:.9rem;
+        background:rgba(255,255,255,.05);border:2px solid var(--border);
+        transition:all .3s;}
+    .agent-card.running  .agent-status-icon{background:rgba(0,245,160,.15);
+        border-color:var(--green);animation:pulse-ring 1.5s infinite;}
+    .agent-card.done .agent-status-icon{background:var(--green);border-color:var(--green);color:var(--dark);}
+    @keyframes pulse-ring{0%,100%{box-shadow:0 0 0 0 rgba(0,245,160,.4);}
+                           50%{box-shadow:0 0 0 6px rgba(0,245,160,0);}}
+
+    .agent-meta{flex:1;}
+    .agent-name{font-size:1rem;font-weight:800;}
+    .agent-role{font-size:.75rem;color:var(--green);text-transform:uppercase;
+                letter-spacing:.8px;font-weight:600;}
+    .agent-superpower{font-size:.75rem;color:var(--grey);margin-top:1px;}
+
+    .agent-badge{font-size:.68rem;text-transform:uppercase;letter-spacing:.8px;
+        font-weight:700;padding:.25rem .7rem;border-radius:20px;white-space:nowrap;}
+    .badge-waiting{background:rgba(255,255,255,.05);color:var(--grey);border:1px solid rgba(255,255,255,.08);}
+    .badge-running{background:rgba(0,245,160,.15);color:var(--green);border:1px solid var(--border);
+        animation:badge-blink 1s infinite;}
+    @keyframes badge-blink{0%,100%{opacity:1}50%{opacity:.5}}
+    .badge-done{background:rgba(0,245,160,.12);color:var(--green2);border:1px solid rgba(0,245,160,.25);}
+
+    .agent-collapse-icon{color:var(--grey);font-size:.8rem;transition:transform .2s;margin-left:.5rem;}
+    .agent-card.open .agent-collapse-icon{transform:rotate(180deg);}
+
+    .agent-body{display:none;padding:1.2rem 1.3rem;border-top:1px solid var(--border);}
+    .agent-card.open .agent-body,
+    .agent-card.running .agent-body,
+    .agent-card.done.open .agent-body{display:block;}
+    .agent-card.running .agent-body{display:block;}
+
+    .agent-output{font-size:.85rem;line-height:1.7;color:var(--white);
+        white-space:pre-wrap;word-break:break-word;
+        max-height:420px;overflow-y:auto;}
+    .agent-output:empty::after{content:'Waiting for handoff...';color:var(--grey);font-style:italic;}
+
+    /* scrollbar */
+    .agent-output::-webkit-scrollbar{width:5px;}
+    .agent-output::-webkit-scrollbar-track{background:transparent;}
+    .agent-output::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+    .cursor{display:inline-block;width:2px;height:.95em;background:var(--green);
+            vertical-align:text-bottom;animation:blink .7s step-end infinite;margin-left:1px;}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+    /* handoff arrow */
+    .handoff-row{display:flex;align-items:center;justify-content:center;
+                 padding:.4rem 0;gap:.7rem;opacity:.35;transition:opacity .5s;}
+    .handoff-row.active{opacity:1;}
+    .handoff-line{height:2px;width:60px;background:var(--border);border-radius:2px;
+        position:relative;overflow:hidden;}
+    .handoff-line::after{content:'';position:absolute;top:0;left:-100%;
+        width:100%;height:100%;background:var(--green);
+        animation:slide-right .8s linear infinite;}
+    .handoff-row.active .handoff-line::after{animation:slide-right .8s linear infinite;}
+    @keyframes slide-right{0%{left:-100%}100%{left:100%}}
+    .handoff-label{font-size:.7rem;color:var(--grey);font-weight:600;
+        text-transform:uppercase;letter-spacing:.8px;}
+
+    /* result panel */
+    #result-panel{display:none;margin-top:2rem;background:rgba(0,245,160,.05);
+        border:1px solid var(--green);border-radius:14px;padding:1.5rem;}
+    .result-header{display:flex;align-items:center;justify-content:space-between;
+                   margin-bottom:1rem;}
+    .result-header h3{font-size:1.1rem;font-weight:800;}
+    .result-header h3 span{color:var(--green);}
+    .result-actions{display:flex;gap:.7rem;}
+    .action-btn{padding:.5rem 1.1rem;border-radius:8px;font-size:.8rem;
+        font-weight:700;cursor:pointer;border:none;transition:all .15s;}
+    .btn-green{background:var(--green);color:var(--dark);}
+    .btn-green:hover{box-shadow:0 4px 16px rgba(0,245,160,.3);transform:translateY(-1px);}
+    .btn-outline{background:transparent;color:var(--green);
+        border:1px solid var(--border);}
+    .btn-outline:hover{background:rgba(0,245,160,.08);}
+
+    .result-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;}
+    .stat-box{background:var(--card);border-radius:10px;padding:.9rem;text-align:center;
+              border:1px solid var(--border);}
+    .stat-val{font-size:1.4rem;font-weight:900;color:var(--green);}
+    .stat-lbl{font-size:.65rem;color:var(--grey);text-transform:uppercase;
+              letter-spacing:.8px;margin-top:2px;}
+
+    @media(max-width:600px){
+      nav{padding:.9rem 1rem;}
+      #setup,#pipeline{padding:1.5rem 1rem;}
+      .result-stats{grid-template-columns:repeat(2,1fr);}
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Pulse<span>Pipeline</span></div>
+  <div class="nav-tag">H9CEAI · NCI 2026</div>
+</nav>
+
+<!-- ═══════════════════════════ SETUP SCREEN ═══════════════════════════ -->
+<div id="setup">
+  <div class="setup-header">
+    <h1>Run the <span>Agentic Organisation</span></h1>
+    <p>Five specialised AI agents — ARIA, ZARA, FORGE, LYRA, CODA — will collaborate in a live sequential pipeline to solve your business challenge.</p>
+  </div>
+
+  <div class="pipeline-preview">
+    <span class="prev-pill">ARIA</span>
+    <span class="prev-arrow">→</span>
+    <span class="prev-pill">ZARA</span>
+    <span class="prev-arrow">→</span>
+    <span class="prev-pill">FORGE</span>
+    <span class="prev-arrow">→</span>
+    <span class="prev-pill">LYRA</span>
+    <span class="prev-arrow">→</span>
+    <span class="prev-pill">CODA</span>
+  </div>
+
+  <div class="form-group">
+    <label>Anthropic API Key</label>
+    <input type="password" id="apiKey" placeholder="sk-ant-api03-..." autocomplete="off" />
+    <div class="hint">Your key is used only in your browser — never stored or sent anywhere else. Get one at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+  </div>
+
+  <div class="form-group">
+    <label>Business Description</label>
+    <textarea id="bizDesc">PulseRetail is an Irish sustainable activewear brand (founded 2022). Crisis: only 18% repeat purchase rate vs. 35% industry benchmark. Average order value €85. Target: 18–35 yr old fitness enthusiasts in Ireland & UK. Current post-purchase touchpoint: one transactional email. No loyalty programme, no personalisation, no re-engagement strategy.</textarea>
+    <div class="hint">Describe any business challenge — real or fictional. The agents will adapt.</div>
+  </div>
+
+  <div class="form-group">
+    <label>Claude Model</label>
+    <select id="modelSelect">
+      <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (Recommended)</option>
+      <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (Faster / cheaper)</option>
+      <option value="claude-opus-4-6">Claude Opus 4.6 (Most powerful)</option>
+    </select>
+  </div>
+
+  <button class="launch-btn" id="launchBtn" onclick="launchPipeline()">
+    Launch Agentic Pipeline →
+  </button>
+  <div class="err-box" id="errBox"></div>
+</div>
+
+<!-- ═══════════════════════════ PIPELINE SCREEN ════════════════════════ -->
+<div id="pipeline">
+  <div class="run-header">
+    <h2>Pipeline Running</h2>
+    <p id="runStatus">Initialising agents…</p>
+  </div>
+
+  <div class="global-progress">
+    <div class="global-progress-fill" id="globalFill"></div>
+  </div>
+
+  <div class="agents-grid" id="agentsGrid">
+    <!-- Injected by JS -->
+  </div>
+
+  <div id="result-panel">
+    <div class="result-header">
+      <h3>Pipeline <span>Complete</span></h3>
+      <div class="result-actions">
+        <button class="action-btn btn-outline" onclick="runAgain()">Run Again</button>
+        <button class="action-btn btn-green" onclick="downloadResults()">Download Results</button>
+      </div>
+    </div>
+    <div class="result-stats" id="resultStats"></div>
+  </div>
+</div>
+
+<script>
+// ── Agent definitions ────────────────────────────────────────────────────────
+const AGENTS = [
+  {
+    id: 'ARIA',
+    role: 'Researcher',
+    superpower: 'Deep analysis & pattern recognition',
+    emoji: '🔍',
+    system: `You are ARIA, the Customer Intelligence Analyst for the business described.
+Your personality: Methodical, data-obsessed, precise. You never speculate without evidence. You speak in data and patterns.
+Your superpower: Deep analysis and pattern recognition.
+Produce a structured Research Brief with exactly these 5 sections:
+1. Market Context
+2. Customer Behaviour Analysis
+3. Root Cause Findings (identify 4-5 specific root causes)
+4. Opportunity Statement (quantify the revenue opportunity)
+5. Recommended Focus Areas for the Designer (5 specific, actionable recommendations)
+Be specific, evidence-based, and concise. Use markdown headers and bullet points.`,
+    getPrompt: (biz) => `Business context: ${biz}\n\nAnalyse this situation, research the market, identify root causes, and produce your Research Brief.`,
+  },
+  {
+    id: 'ZARA',
+    role: 'Designer',
+    superpower: 'Creative problem-solving & design thinking',
+    emoji: '✏️',
+    system: `You are ZARA, the Experience Design Architect.
+Your personality: Visionary, empathetic, boldly creative. You anchor every idea in human emotional truth.
+Your superpower: Creative problem-solving and design thinking.
+Take the Researcher's Brief and produce a Design Specification with exactly these 5 sections:
+1. Solution Concept (give it a name and tagline)
+2. User Journey Map (4 key touchpoints with timing)
+3. Feature Specifications (5 specific features with descriptions)
+4. UI/UX Principles (4-5 design principles)
+5. Handoff Notes for the Maker (technical specifics)
+Be creative but precise. Use markdown headers and bullet points.`,
+    getPrompt: (_, prev) => `ARIA's Research Brief:\n\n${prev}\n\nDesign the solution based on these findings.`,
+  },
+  {
+    id: 'FORGE',
+    role: 'Maker',
+    superpower: 'Technical craftsmanship & rapid prototyping',
+    emoji: '⚙️',
+    system: `You are FORGE, the Product Engineer.
+Your personality: Pragmatic, fast-moving, shipping-obsessed. Blunt about feasibility.
+Your superpower: Technical craftsmanship and rapid prototyping.
+Take the Design Specification and produce a technical build report with:
+1. Technical Architecture Overview (stack decisions and rationale)
+2. Core Features Built (describe each of the 5 features implemented)
+3. Key Implementation Details (specific techniques, patterns used)
+4. Deployment Instructions (how to run/deploy)
+5. Production Extensions (what would be needed beyond the prototype)
+Be technical and specific. Reference the design spec directly.`,
+    getPrompt: (_, prev) => `ZARA's Design Specification:\n\n${prev}\n\nProduce the technical build report for this prototype.`,
+  },
+  {
+    id: 'LYRA',
+    role: 'Communicator',
+    superpower: 'Persuasion & storytelling',
+    emoji: '📣',
+    system: `You are LYRA, the Brand & Marketing Strategist.
+Your personality: Magnetic, persuasive, culturally attuned. You craft stories that move people.
+Your superpower: Persuasion and storytelling.
+Take what was built and produce a Go-to-Market Strategy with:
+1. Go-to-Market Strategy (campaign name, 3-phase approach)
+2. Brand Messaging Framework (core message + audience-specific messaging)
+3. Email Campaign Sequence (write 3 actual emails: Day 3, Day 14, Day 30)
+4. Social Media Content Plan (weekly plan for primary channel)
+5. Launch Timeline (week-by-week)
+Write actual email copy — not placeholders. Be specific and compelling.`,
+    getPrompt: (biz, prev) => `Business: ${biz}\n\nFORGE's Build Report:\n\n${prev}\n\nCreate the full go-to-market strategy.`,
+  },
+  {
+    id: 'CODA',
+    role: 'Manager',
+    superpower: 'Leadership & orchestration',
+    emoji: '👔',
+    system: `You are CODA, the Chief Operating Agent.
+Your personality: Strategic, decisive, outcome-focused. You see the whole board.
+Your superpower: Leadership and orchestration.
+Review the COMPLETE pipeline output and produce:
+1. Executive Summary (250 words max — board-ready)
+2. Strategic Alignment Assessment (rate each agent's output, identify dependencies)
+3. Projected Business Impact (quantify: revenue, ROI, timeline)
+4. 90-Day Operational Roadmap (Month 1, 2, 3 actions)
+5. Risk Register (5 risks with likelihood, impact, mitigation)
+6. Board Recommendation (clear GO/NO-GO with rationale)
+Be decisive. Use data from the full pipeline.`,
+    getPrompt: (biz, allPrev) => `Business: ${biz}\n\nFull pipeline summary:\n${allPrev}\n\nProduce the Executive Summary and Operational Plan.`,
+  },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let outputs = {};
+let startTimes = {};
+let totalTokens = 0;
+
+// ── Build pipeline UI ─────────────────────────────────────────────────────────
+function buildPipelineUI() {
+  const grid = document.getElementById('agentsGrid');
+  grid.innerHTML = '';
+  AGENTS.forEach((agent, i) => {
+    // Agent card
+    const card = document.createElement('div');
+    card.className = 'agent-card';
+    card.id = `card-${agent.id}`;
+    card.innerHTML = `
+      <div class="agent-header" onclick="toggleCard('${agent.id}')">
+        <div class="agent-status-icon" id="icon-${agent.id}">${agent.emoji}</div>
+        <div class="agent-meta">
+          <div class="agent-name">${agent.id}</div>
+          <div class="agent-role">${agent.role}</div>
+          <div class="agent-superpower">${agent.superpower}</div>
+        </div>
+        <span class="agent-badge badge-waiting" id="badge-${agent.id}">Waiting</span>
+        <span class="agent-collapse-icon" id="chevron-${agent.id}">▼</span>
+      </div>
+      <div class="agent-body">
+        <div class="agent-output" id="output-${agent.id}"></div>
+      </div>`;
+    grid.appendChild(card);
+
+    // Handoff arrow (between agents)
+    if (i < AGENTS.length - 1) {
+      const handoff = document.createElement('div');
+      handoff.className = 'handoff-row';
+      handoff.id = `handoff-${i}`;
+      handoff.innerHTML = `
+        <div class="handoff-line"></div>
+        <div class="handoff-label">${agent.id} → ${AGENTS[i+1].id}</div>
+        <div class="handoff-line"></div>`;
+      grid.appendChild(handoff);
+    }
+  });
+}
+
+function toggleCard(id) {
+  const card = document.getElementById(`card-${id}`);
+  card.classList.toggle('open');
+}
+
+// ── Run a single agent with streaming ─────────────────────────────────────────
+async function runAgent(agent, prompt, apiKey, model) {
+  const card  = document.getElementById(`card-${agent.id}`);
+  const badge = document.getElementById(`badge-${agent.id}`);
+  const icon  = document.getElementById(`icon-${agent.id}`);
+  const out   = document.getElementById(`output-${agent.id}`);
+
+  // Set running state
+  card.classList.add('running', 'open');
+  badge.className = 'agent-badge badge-running';
+  badge.textContent = 'Running…';
+  startTimes[agent.id] = Date.now();
+  out.innerHTML = '';
+
+  // Cursor
+  const cursor = document.createElement('span');
+  cursor.className = 'cursor';
+  out.appendChild(cursor);
+
+  let text = '';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 1800,
+        stream: true,
+        system: agent.system,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ error: { message: resp.statusText } }));
+      throw new Error(err.error?.message || `HTTP ${resp.status}`);
+    }
+
+    const reader  = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let   buffer  = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const evt = JSON.parse(raw);
+          if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+            text += evt.delta.text;
+            out.textContent = text;
+            out.appendChild(cursor);
+            out.scrollTop = out.scrollHeight;
+          }
+          if (evt.type === 'message_delta' && evt.usage) {
+            totalTokens += (evt.usage.output_tokens || 0);
+          }
+        } catch (_) {}
+      }
+    }
+  } catch (e) {
+    throw e;
+  }
+
+  // Remove cursor, finalise
+  cursor.remove();
+  out.textContent = text;
+
+  card.classList.remove('running');
+  card.classList.add('done');
+  badge.className = 'agent-badge badge-done';
+  const elapsed = ((Date.now() - startTimes[agent.id]) / 1000).toFixed(1);
+  badge.textContent = `✓ ${elapsed}s`;
+  icon.textContent = '✓';
+
+  return text;
+}
+
+// ── Main pipeline launcher ────────────────────────────────────────────────────
+async function launchPipeline() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const biz    = document.getElementById('bizDesc').value.trim();
+  const model  = document.getElementById('modelSelect').value;
+  const errBox = document.getElementById('errBox');
+  const btn    = document.getElementById('launchBtn');
+
+  errBox.style.display = 'none';
+  if (!apiKey) { showErr('Please enter your Anthropic API key.'); return; }
+  if (!apiKey.startsWith('sk-ant')) { showErr('API key should start with sk-ant-…'); return; }
+  if (!biz) { showErr('Please describe the business challenge.'); return; }
+
+  // Switch screens
+  btn.disabled = true;
+  document.getElementById('setup').style.display    = 'none';
+  document.getElementById('pipeline').style.display = 'block';
+  outputs = {}; totalTokens = 0;
+
+  buildPipelineUI();
+  const fill = document.getElementById('globalFill');
+  const status = document.getElementById('runStatus');
+
+  const STEPS = AGENTS.length;
+
+  for (let i = 0; i < AGENTS.length; i++) {
+    const agent = AGENTS[i];
+    status.textContent = `Step ${i+1}/${STEPS}: ${agent.id} (${agent.role}) is working…`;
+    fill.style.width = `${(i / STEPS) * 100}%`;
+
+    // Activate handoff arrow from previous
+    if (i > 0) {
+      document.getElementById(`handoff-${i-1}`)?.classList.add('active');
+    }
+
+    // Build prompt
+    let prompt;
+    if (i === 0) {
+      prompt = agent.getPrompt(biz);
+    } else if (i === AGENTS.length - 1) {
+      // Manager gets a digest of all previous outputs
+      const digest = AGENTS.slice(0, i).map(a =>
+        `## ${a.id} (${a.role})\n${(outputs[a.id] || '').slice(0, 600)}…`
+      ).join('\n\n');
+      prompt = agent.getPrompt(biz, digest);
+    } else {
+      prompt = agent.getPrompt(biz, outputs[AGENTS[i-1].id] || '');
+    }
+
+    try {
+      outputs[agent.id] = await runAgent(agent, prompt, apiKey, model);
+    } catch (e) {
+      status.textContent = `Error in ${agent.id}: ${e.message}`;
+      document.getElementById(`badge-${agent.id}`).textContent = '✗ Error';
+      document.getElementById(`badge-${agent.id}`).style.color = '#fca5a5';
+      document.getElementById(`output-${agent.id}`).textContent = `Error: ${e.message}`;
+      showPipelineErr(`${agent.id} failed: ${e.message}`);
+      btn.disabled = false;
+      return;
+    }
+  }
+
+  // Done
+  fill.style.width = '100%';
+  status.textContent = 'Pipeline complete — all 5 agents delivered.';
+  showResultPanel();
+}
+
+function showResultPanel() {
+  const panel = document.getElementById('result-panel');
+  const stats = document.getElementById('resultStats');
+  panel.style.display = 'block';
+
+  const totalTime = Object.values(startTimes).reduce((acc, t) => {
+    const agent = AGENTS.find(a => startTimes[a.id] === t);
+    const elapsed = agent ? parseFloat(document.getElementById(`badge-${agent.id}`)
+      .textContent.replace(/[^0-9.]/g,'')) : 0;
+    return acc + elapsed;
+  }, 0);
+
+  const wordCount = Object.values(outputs).join(' ').split(/\s+/).length;
+
+  stats.innerHTML = `
+    <div class="stat-box"><div class="stat-val">5</div><div class="stat-lbl">Agents run</div></div>
+    <div class="stat-box"><div class="stat-val">${wordCount.toLocaleString()}</div><div class="stat-lbl">Words generated</div></div>
+    <div class="stat-box"><div class="stat-val">${totalTokens.toLocaleString()}</div><div class="stat-lbl">Output tokens</div></div>
+    <div class="stat-box"><div class="stat-val">${Object.keys(outputs).length}</div><div class="stat-lbl">Handoffs completed</div></div>`;
+
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function downloadResults() {
+  const biz = document.getElementById('bizDesc')?.value || '';
+  let md = `# PulseRetail Agentic Organisation — Pipeline Output\n`;
+  md += `> Generated by H9CEAI Agentic Pipeline Runner | NCI 2026\n\n`;
+  md += `**Business:** ${biz}\n\n---\n\n`;
+  AGENTS.forEach(a => {
+    md += `## ${a.id} — ${a.role}\n*Superpower: ${a.superpower}*\n\n`;
+    md += (outputs[a.id] || 'No output.') + '\n\n---\n\n';
+  });
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'pulseretail-pipeline-output.md';
+  a.click();
+}
+
+function runAgain() {
+  document.getElementById('pipeline').style.display = 'none';
+  document.getElementById('setup').style.display    = 'block';
+  document.getElementById('launchBtn').disabled     = false;
+  document.getElementById('result-panel').style.display = 'none';
+}
+
+function showErr(msg) {
+  const b = document.getElementById('errBox');
+  b.textContent = msg; b.style.display = 'block';
+}
+
+function showPipelineErr(msg) {
+  const s = document.getElementById('runStatus');
+  s.style.color = '#fca5a5';
+  s.textContent = msg;
+}
+</script>
+</body>
+</html>
